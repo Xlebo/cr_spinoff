@@ -1,0 +1,6 @@
+# Default: normalize line endings on commit, checkout with OS native
+* text=auto
+
+# Shell scripts must always use LF — CRLF breaks the shebang on Linux/Railway
+gradlew text eol=lf
+*.sh   text eol=lf
