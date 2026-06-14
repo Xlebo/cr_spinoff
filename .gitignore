@@ -11,3 +11,6 @@ game/android/libs/
 
 # Claude Code local settings (machine-specific)
 .claude/
+
+# Fly.io
+.fly/

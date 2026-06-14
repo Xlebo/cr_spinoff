@@ -1,0 +1,20 @@
+# Gradle caches and all build outputs — the Docker build produces its own
+.gradle/
+build/
+game/android/build/
+game/core/build/
+game/desktop/build/
+server/build/
+shared/build/
+
+# Android native .so files (not needed server-side)
+game/android/libs/
+
+# Local dev files
+local.properties
+.idea/
+*.iml
+*.class
+*.log
+.git/
+.claude/
