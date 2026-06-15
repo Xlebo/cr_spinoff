@@ -11,5 +11,6 @@ fun main() {
         setResizable(false)
         setForegroundFPS(60)
     }
-    Lwjgl3Application(ClashGame(), config)
+    val serverUrl = System.getProperty("serverUrl", "ws://localhost:8080/ws")
+    Lwjgl3Application(ClashGame(serverUrl), config)
 }

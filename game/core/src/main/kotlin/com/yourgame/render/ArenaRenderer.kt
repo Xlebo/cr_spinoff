@@ -13,22 +13,22 @@ class ArenaRenderer {
 
     private val sr = ShapeRenderer()
 
-    private var scale     = 1f
-    private var arenaLeft = 0f
+    private var scale       = 1f
+    private var arenaLeft   = 0f
+    private var arenaBottom = 0f   // pixel Y where world Y=0 sits (top of card tray)
 
-    // Called from ClashGame.resize()
-    fun resize(screenW: Int, screenH: Int) {
-        scale     = screenH / 1800f
-        arenaLeft = (screenW - 1000f * scale) / 2f
+    fun resize(screenW: Int, screenH: Int, trayH: Float) {
+        scale       = (screenH - trayH) / 1800f
+        arenaLeft   = (screenW - 1000f * scale) / 2f
+        arenaBottom = trayH
     }
 
-    private fun wx(x: Float) = arenaLeft + x * scale
-    private fun wy(y: Float) = y * scale               // Y=0 at screen bottom
+    private fun wx(x: Float) = arenaLeft   + x * scale
+    private fun wy(y: Float) = arenaBottom + y * scale
     private fun ws(s: Float) = s * scale
 
-    // Screen-to-world converters used by CardPlacementController.
-    fun toWorldX(screenX: Float) = (screenX - arenaLeft) / scale
-    fun toWorldY(flippedScreenY: Float) = flippedScreenY / scale
+    fun toWorldX(screenX: Float)        = (screenX        - arenaLeft)   / scale
+    fun toWorldY(flippedScreenY: Float) = (flippedScreenY - arenaBottom) / scale
 
     fun renderSelectionOverlay(playerIndex: Int, proj: Matrix4) {
         val (yMin, yMax) = if (playerIndex == 0) 100f to 850f else 950f to 1700f

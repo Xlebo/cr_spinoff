@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.yourgame.ClashGame
+import com.yourgame.network.GameWebSocketClient
 
 class MenuScreen(private val game: ClashGame) : ScreenAdapter() {
 
@@ -21,6 +22,7 @@ class MenuScreen(private val game: ClashGame) : ScreenAdapter() {
                 val fx = screenX.toFloat()
                 val fy = Gdx.graphics.height - screenY.toFloat()   // flip: Y=0 at bottom
                 if (fx >= btnX && fx <= btnX + BTN_W && fy >= btnY && fy <= btnY + BTN_H) {
+                    GameWebSocketClient.joinQueue()
                     game.setScreen(MatchmakingScreen(game))
                 }
                 return true

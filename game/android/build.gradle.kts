@@ -48,6 +48,7 @@ dependencies {
     implementation(project(":game:core"))
     implementation(libs.libgdx.backend.android)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.ktor.client.okhttp)
     natives("com.badlogicgames.gdx:gdx-platform:$libgdxVersion:natives-armeabi-v7a")
     natives("com.badlogicgames.gdx:gdx-platform:$libgdxVersion:natives-arm64-v8a")
     natives("com.badlogicgames.gdx:gdx-platform:$libgdxVersion:natives-x86")

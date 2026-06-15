@@ -2,13 +2,13 @@ package com.yourgame.network
 
 import com.yourgame.shared.*
 import io.ktor.client.*
-import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.serialization.encodeToString
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 object GameWebSocketClient {
@@ -18,16 +18,26 @@ object GameWebSocketClient {
 
     val playerId: String = UUID.randomUUID().toString()
 
-    private val httpClient = HttpClient(CIO) {
+    private val httpClient = HttpClient {
         install(WebSockets)
     }
 
-    // Messages queued by the game logic to be sent to the server.
-    // Named txQueue to avoid shadowing DefaultClientWebSocketSession.outgoing.
     private val txQueue = Channel<String>(capacity = Channel.UNLIMITED)
+
+    // Set to true when the user explicitly presses PLAY.
+    // The connect loop waits on this before sending JOIN_QUEUE, so a second
+    // player who hasn't tapped PLAY yet never enters the matchmaking queue.
+    private val wantsToQueue = AtomicBoolean(false)
+    private val joinSignal   = Channel<Unit>(Channel.CONFLATED)
 
     fun start(serverUrl: String, scope: CoroutineScope) {
         scope.launch { connectLoop(serverUrl) }
+    }
+
+    /** Call when the user taps PLAY. Safe to call before the WebSocket connects. */
+    fun joinQueue() {
+        wantsToQueue.set(true)
+        joinSignal.trySend(Unit)
     }
 
     fun enqueue(msg: ClientMessage) {
@@ -40,6 +50,9 @@ object GameWebSocketClient {
             println("[Network] Connecting to $serverUrl ...")
             try {
                 httpClient.webSocket(serverUrl) {
+                    // Wait until the user has pressed PLAY before joining the queue.
+                    if (!wantsToQueue.get()) joinSignal.receive()
+
                     _state.set(ClientGameState(phase = Phase.MATCHMAKING))
                     println("[Network] Connected. Sending JOIN_QUEUE playerId=$playerId")
                     send(Frame.Text(GameJson.encodeToString<ClientMessage>(JoinQueue(playerId))))

@@ -12,20 +12,37 @@ class CardHandUI(private val font: BitmapFont) {
     private val sr = ShapeRenderer()
     private val cards = CardType.entries.toList()
 
+    // All dimensions in screen pixels; updated in resize().
+    var trayH   = 100f; private set
+    private var cardW     = 56f
+    private var cardH     = 84f
+    private var gap       = 4f
+    private var slotY     = 8f
+    private var fontScale = 0.9f
+
+    /** Call whenever the screen size changes (before ArenaRenderer.resize). */
+    fun resize(screenW: Float) {
+        gap       = maxOf(3f, screenW * 0.007f)
+        cardW     = (screenW - (cards.size + 1) * gap) / cards.size
+        cardH     = cardW * 1.45f
+        slotY     = gap
+        trayH     = cardH + slotY * 2f
+        fontScale = (cardW / 52f).coerceIn(0.75f, 3f)
+    }
+
     fun costOf(card: CardType): Int = COSTS.getValue(card)
     fun cardAt(index: Int): CardType = cards[index]
 
     private fun slotX(screenW: Float, i: Int): Float {
-        val totalW = cards.size * CARD_W + (cards.size - 1) * GAP
-        return (screenW - totalW) / 2f + i * (CARD_W + GAP)
+        val totalW = cards.size * cardW + (cards.size - 1) * gap
+        return (screenW - totalW) / 2f + i * (cardW + gap)
     }
 
-    // flippedY = screenH - rawTouchY  (Y=0 at bottom)
     fun hitTest(touchX: Float, flippedY: Float, screenW: Float): Int? {
-        if (flippedY > TRAY_H) return null
+        if (flippedY > trayH) return null
         for (i in cards.indices) {
             val x = slotX(screenW, i)
-            if (touchX >= x && touchX <= x + CARD_W) return i
+            if (touchX >= x && touchX <= x + cardW) return i
         }
         return null
     }
@@ -35,7 +52,7 @@ class CardHandUI(private val font: BitmapFont) {
         sr.begin(ShapeRenderer.ShapeType.Filled)
 
         sr.color = Color(0.08f, 0.08f, 0.10f, 1f)
-        sr.rect(0f, 0f, screenW, TRAY_H)
+        sr.rect(0f, 0f, screenW, trayH)
 
         for (i in cards.indices) {
             val cost = COSTS.getValue(cards[i])
@@ -44,26 +61,32 @@ class CardHandUI(private val font: BitmapFont) {
                 elixir < cost      -> Color(0.18f, 0.18f, 0.22f, 1f)
                 else               -> Color(0.18f, 0.38f, 0.72f, 1f)
             }
-            sr.rect(slotX(screenW, i), SLOT_Y, CARD_W, CARD_H)
+            sr.rect(slotX(screenW, i), slotY, cardW, cardH)
         }
 
         sr.end()
     }
 
-    // Call with an already-open SpriteBatch.
     fun drawGlyphs(batch: SpriteBatch, screenW: Float, elixir: Float, selectedIndex: Int?) {
         val prevX = font.data.scaleX
         val prevY = font.data.scaleY
-        font.data.setScale(0.55f)
+        font.data.setScale(fontScale)
+
+        val lineH  = font.lineHeight
+        val costH  = lineH * 0.85f
 
         for (i in cards.indices) {
             val card = cards[i]
             val cost = COSTS.getValue(card)
-            val x = slotX(screenW, i)
+            val x    = slotX(screenW, i)
             font.color = if (elixir >= cost) Color.WHITE else Color(0.45f, 0.45f, 0.45f, 1f)
-            font.draw(batch, LABELS.getValue(card), x + 3f, SLOT_Y + CARD_H - 4f)
+            // Name centred horizontally in the card, near the top
+            font.draw(batch, LABELS.getValue(card), x + gap / 2f, slotY + cardH - gap)
+            // Elixir cost bottom-right
             font.color = ELIXIR_COLOR
-            font.draw(batch, cost.toString(), x + CARD_W - 11f, SLOT_Y + 15f)
+            font.data.setScale(fontScale * 0.85f)
+            font.draw(batch, cost.toString(), x + cardW - lineH * 0.5f, slotY + costH + gap)
+            font.data.setScale(fontScale)
         }
 
         font.data.setScale(prevX, prevY)
@@ -72,12 +95,6 @@ class CardHandUI(private val font: BitmapFont) {
     fun dispose() = sr.dispose()
 
     companion object {
-        const val TRAY_H = 88f
-        private const val CARD_W = 52f
-        private const val CARD_H = 72f
-        private const val GAP = 4f
-        private const val SLOT_Y = 8f
-
         private val ELIXIR_COLOR = Color(0.65f, 0.10f, 0.85f, 1f)
 
         val COSTS = mapOf(
@@ -96,7 +113,7 @@ class CardHandUI(private val font: BitmapFont) {
             CardType.ARCHER     to "Archer",
             CardType.GIANT      to "Giant",
             CardType.FIREBALL   to "Fire",
-            CardType.MINIONS    to "Minio",
+            CardType.MINIONS    to "Minion",
             CardType.BARBARIANS to "Barbs",
             CardType.MUSKETEER  to "Musk",
             CardType.MINI_PEKKA to "M.Pkka",

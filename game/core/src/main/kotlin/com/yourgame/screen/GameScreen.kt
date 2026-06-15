@@ -17,12 +17,17 @@ class GameScreen(private val game: ClashGame) : ScreenAdapter() {
     private val controller = CardPlacementController(cardUI, arena)
 
     override fun show() {
-        arena.resize(Gdx.graphics.width, Gdx.graphics.height)
+        doResize(Gdx.graphics.width, Gdx.graphics.height)
         Gdx.input.inputProcessor = controller
     }
 
     override fun resize(width: Int, height: Int) {
-        arena.resize(width, height)
+        doResize(width, height)
+    }
+
+    private fun doResize(w: Int, h: Int) {
+        cardUI.resize(w.toFloat())
+        arena.resize(w, h, cardUI.trayH)
     }
 
     override fun render(delta: Float) {

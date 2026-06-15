@@ -14,10 +14,16 @@ application {
     mainClass.set("com.yourgame.desktop.DesktopLauncherKt")
 }
 
+tasks.named<JavaExec>("run") {
+    val url = project.findProperty("serverUrl")?.toString() ?: "ws://localhost:8080/ws"
+    jvmArgs("-DserverUrl=$url")
+}
+
 val libgdxVersion: String = libs.versions.libgdx.get()
 
 dependencies {
     implementation(project(":game:core"))
     implementation(libs.libgdx.backend.desktop)
     implementation("com.badlogicgames.gdx:gdx-platform:$libgdxVersion:natives-desktop")
+    implementation(libs.ktor.client.cio)
 }
